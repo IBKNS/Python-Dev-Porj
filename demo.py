@@ -71,11 +71,21 @@ def update_data():
     Update data in students table
     """
     student_id = int(input("Enter student ID to update: "))
-    name = input("Enter new student name: ")
-    address = input("Enter new student address: ")
-    age = int(input("Enter new student age: "))
-    number = input("Enter new student number: ")
-
+    ## create a dictionary to hold the fields to update and their new values
+    filds_to_update = {
+        "name": input("Enter new name (leave blank to keep current): "),
+        "address": input("Enter new address (leave blank to keep current): "),
+        "age": input("Enter new age (leave blank to keep current): "),
+        "number": input("Enter new number (leave blank to keep current): ") 
+    }
+    print(f"Fields to update: {filds_to_update}")
+    ## filter out the fields that are empty
+    filds_to_update = {k: v for k, v in filds_to_update.items() if v}
+    print(f"Fields to update after filtering: {filds_to_update}")
+    ## create the update query dynamically based on the fields to update
+    set_clause = ", ".join([f"{k}=%s" for k in filds_to_update.keys()])
+    values = list(filds_to_update.values())
+    values.append(student_id)
     try:
         connection = psycopg2.connect(
             host="localhost",
@@ -89,8 +99,7 @@ def update_data():
         print("Connected to PostgreSQL successfully!")
         
         # Example update query
-        cursor.execute("UPDATE students SET name=%s, address=%s, age=%s, number=%s WHERE student_id=%s", 
-                       (name, address, age, number, student_id))
+        cursor.execute(f"UPDATE students SET {set_clause} WHERE student_id=%s", values)
         connection.commit()
         print(f"Data updated in students table")
         
